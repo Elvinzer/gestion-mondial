@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 	<body>
-	<h1> Cette page affiche les commandes dont les facturations d'expédition n'ont pas encore été faites </h1>
+	<h1 class ="test"> Cette page affiche les commandes dont les facturations d'expédition n'ont pas encore été faites </h1>
 	<h2> Les facturations s'effectuent uniquement sur des commandes notifiées comme "Terminé" par le back-office du site </h2>
 	<h2 style ='font-style : italic;'> (En statut "pending", les fonds seraient encore dans le wallet du client, donc pas dispo pour la facturation) </h2>
 
@@ -14,10 +14,10 @@
 	require_once('mangoClass.php');
 	require_once('mesFonctions.php');
 	global $wpdb ;
-	$pre_url = 'https://api.sandbox.mangopay.com/v2.01/';
-	
+	$pre_url = 'https://api.mangopay.com/v2.01/';
 
-	
+
+
 	/********************** On crée la table SQL si elle n'existe pas *********************/
 		$charset_collate = $wpdb->get_charset_collate();
 		$tarif_mondial_table_name = $wpdb->prefix . 'tarif_mondialrelay';
@@ -32,7 +32,7 @@
 			annee decimal(10,0) DEFAULT NULL,
 			PRIMARY KEY  (id)
 		) $charset_collate;";
-		
+
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		// On crée la table grace à Upgrade.php
 		dbDelta($creation_tarifs_sql);
@@ -42,17 +42,17 @@
 
 	// On crée un nouvel objet de la classe Mangopay (mangoClass.php)
 	$myMangoPayAction = new Mangopay;
-	
-	
-	$commandes = $wpdb->get_results("SELECT $mondial_table_name.order_id as macommande, $mondial_table_name.id_vendor as idvendeur, 
-							$mondial_table_name.flag_generated as flag, 
+
+
+	$commandes = $wpdb->get_results("SELECT $mondial_table_name.order_id as macommande, $mondial_table_name.id_vendor as idvendeur,
+							$mondial_table_name.flag_generated as flag,
 							$mondial_table_name.num_commande_mr as numero_mr, $mondial_table_name.weight_in_gr as poids, ".$prefix_base."wc_order_stats.status
 							FROM $mondial_table_name, ".$prefix_base."wc_order_stats
 							WHERE $mondial_table_name.paid IS NULL
 							AND $mondial_table_name.order_id = ".$prefix_base."wc_order_stats.order_id
 							AND ".$prefix_base."wc_order_stats.status = 'wc-completed'
 							");
-		
+
 		/*************BLOC DAFFICHAGE DES DONNEES*************/
 		// On affiche les résultats uniquement si il y a au moins un résultat à afficher
 		if ($wpdb->num_rows != 0){
@@ -80,7 +80,7 @@
 					{
 						// Avant d'afficher les commandes à facturer, on check que chacune ne soit pas encore facturé
 						if ($commande->flag = 'yes'){
-							
+
 							$monNumeroDeCommande = $commande->macommande;
 							$monIdVendeur = $commande->idvendeur;
 							$monNumeroMondialRelay = $commande->numero_mr;
@@ -89,17 +89,17 @@
 							$monIdMangopay = $myMangoPayAction->get_user_id_mango($mailVendeur);
 							$monWalletMangopay = $myMangoPayAction->get_wallet($monIdMangopay);
 							$monPoidsMax = get_poids_max($monPoids);
-							$lienWalletVendeur = 'https://dashboard.sandbox.mangopay.com/User/'. $monIdMangopay .'/Wallets';
-								
+							$lienWalletVendeur = 'https://dashboard.mangopay.com/User/'. $monIdMangopay .'/Wallets';
+
 							$monMontant = $wpdb->get_results("SELECT tarif_ttc FROM $tarif_mondial_table_name
 							WHERE poids_max_gr = " .$monPoidsMax."
 							");
 							foreach ( $monMontant as $go ){
 								$monMontant = $go->tarif_ttc;
 							}
-		
+
 					//var_dump $monPoidsMax;
-							
+
 					// DONNEES A AFFICHER dans chaque cellule de la ligne
 				?>
 							<tr id = 'contenu'>
